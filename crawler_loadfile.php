@@ -7,7 +7,11 @@
 	ini_set("memory_limit","2048M");
 	set_time_limit(0);
 	$env = "dev";
-	$urls	= "http://www.one2up.com/list_content.php?page=1&txt_Search=%E0%B8%AB%E0%B8%99%E0%B8%B1%E0%B8%87&radio_type=content_Name";
+	/* input any url 
+	* check your all page number
+	*/
+	$urls	= "";
+	
 	if($env ==="dev" || "") {
 		define('database','test');
 		define('hostname','localhost');
