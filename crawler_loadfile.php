@@ -59,8 +59,6 @@
 				
 				}
 				
-				
-				
 			}else{
 				$a =$node->getAttribute( $att );
 				$b = strstr($a,$find);
@@ -153,11 +151,7 @@
 				'status'		=>  $status,
 			);
 			insert_log($insert_log);
-			
 		}
-		
-	 
-
 	}
 	function debug($data= array(),$v=false) {
 		echo "<pre>"; print_r($data);echo "</pre>";
@@ -185,8 +179,6 @@
 			$sql ="INSERT INTO  `student_profile` VALUES (NULL ,  '".$val['id']."',  '".$val['name']."',  '".$val['fac']."',  '".$val['major']."',  '".$val['status']."');";
 			connect_database($sql);
 		}
-
-		
 	}
 	function insert_log($val = array()) {
 		@mysql_connect(hostname,username,password);
