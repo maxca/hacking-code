@@ -1,0 +1,1 @@
+{"js_allow_type":{"allow_type_pre":"1","allow_type_post":"1"}}

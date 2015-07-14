@@ -1,17 +1,41 @@
 <meta charset="utf-8">
-<?php
+<?php 
 	/* For download any file on one2up.com 
 	* @Author samark chaisangun
 	* @2014
 	*/
+	$timestart	= microtime(true);
 	ini_set("memory_limit","2048M");
 	set_time_limit(0);
 	$env = "dev";
+	$input	= array(
+			'txt_Search'	=> 'เกมส์',
+		);
+	$url	= "http://www.one2up.com/list_content.php";
+
 	/* input any url 
 	* check your all page number
 	*/
 	// $urls	= "http://www.one2up.com/list_content.php?page=1&txt_Search=cia&radio_type=member_displayname";
+	// $get_start_up_data	= 
+	$filehtml	= curl_content($url,$input);
+	// debugs($filehtml,1,1);
+	$page_data	= check_pagin($filehtml);
+	$stpange	= str_replace("page=2", "page=1", $page_data[0]);
+	// debugs($page_data,1,1);
+	$start		= "http://www.one2up.com/".$stpange;
 	
+	$cnts		= explode("page=", end($page_data));
+	$refl		= explode("&", $cnts[1]);
+	// debugs($refl,1,1);
+	/*preg_match('/[0-9]{2}/',end($page_data),$number);
+	if(empty($refl[0]) || !is_numeric($refl[0])) {
+		die('not found data');
+	}*/
+	$nums	= $refl;
+	$urls	= $start;
+	// debugs($start,1,1); 
+	// debugs($nums); exit();
 	if($env ==="dev" || "") {
 		define('database','log_download');
 		define('hostname','localhost');
@@ -19,7 +43,7 @@
 		define('username','root');
 		define('password','');
 		define('url_get',$urls);
-		define('num',$nums);
+		define('num',$nums[0]);
 		define('URL_N','http://www.one2up.com/');
 		
 	} else{
@@ -29,9 +53,101 @@
 		define('username','backhoet_pic');
 		define('password','IVw58LFQ');	
 		define('url_get',$urls);
-		define('num',$nums);
+		define('num',$nums[0]);
 		define('URL_N','http://www.one2up.com/');
 	}
+	// echo num;exit();
+	start();
+	echo microtime(true)- $timestart;
+	// define('url','');
+	// define('database','');
+	// define('hostname','');
+	// define('password', '');
+	// define('dir',"");
+
+	function crawl_page($url, $depth = 5) {
+		if($depth > 0) {
+		    $html = file_get_contents($url);
+
+		    preg_match_all('~<a.*?href="(.*?)".*?>~', $html, $matches);
+
+		    foreach($matches[1] as $newurl) {
+		        crawl_page($newurl, $depth - 1);
+		    }
+
+		    file_put_contents('results.txt', $newurl."\n\n".$html."\n\n", FILE_APPEND);
+		}
+	}
+
+	function curl_content($url ="",$data=array()) {
+		$ch = curl_init();
+		/*$skipper = "luxury assault recreational vehicle";
+		$fields = array( 'penguins'=>$skipper, 'bestpony'=>'rainbowdash');
+		$postvars = '';
+		foreach($fields as $key=>$value) {
+			$postvars .= $key . "=" . $value . "&";
+		}
+		$url = "http://www.google.com";*/
+		curl_setopt($ch,CURLOPT_URL,$url);
+		curl_setopt($ch,CURLOPT_POST, 1);                //0 for a get request
+		curl_setopt($ch,CURLOPT_POSTFIELDS,http_build_query($data));
+		curl_setopt($ch,CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch,CURLOPT_CONNECTTIMEOUT ,3);
+		curl_setopt($ch,CURLOPT_TIMEOUT, 20);
+		// curl_setopt($ch, CURLOPT_COOKIEFILE, $cookieFile);
+		// curl_setopt($ch, CURLOPT_COOKIEJAR,  $cookieFile);
+		return curl_exec($ch);
+		print "curl response is:" . $response;
+		curl_close ($ch);
+	}
+	function debugs($data ='',$v=false,$e=false) {
+		echo "<pre>"; print_r($data); echo "</pre>";
+		if($v == true) var_dump($data);
+		if($e == true) exit('debugs');
+	} 
+	function get_cookie($cookie="") {
+		$cookie = "PHPSESSID=f8kef426celtg6adc9s4fosid0; _ga=GA1.2.1919723022.1432100145; __utma=1.1919723022.1432100145.1432811655.1432871976.11; __utmb=1.1.10.1432871976; __utmc=1; __utmz=1.1432304161.6.3.utmcsr=google|utmccn=(organic)|utmcmd=organic|utmctr=(not%20provided)";
+		// debugs(explode(";",$cookie));		
+		$data =array();
+		foreach (explode(";",$cookie) as $key => $value) {
+			$ex = explode("=",$value);
+			$data[$ex[0]] = $ex[1];
+		}
+		debugs($data);
+	}
+	// get_cookie();
+	// debugs(curl_content($url,$input));
+	// debugs($number,1,1);
+
+	// debugs($filehtml);
+	// file_put_contents("test.html", $filehtml);
+	function check_pagin($html="") {
+		if(!empty($html)) {
+			$pgid	= "pageLinks";
+			// $title  =get_node($html,"div","title","");
+			return get_elementID($html,$pgid);
+		}
+
+	}
+	function get_elementID($html,$id) {
+		$dom = new DOMDocument;
+		@$dom->loadHTML($html);
+		$stk	= array();
+		foreach ($dom->getElementsByTagName('a') as $node) {	
+
+			// $stk[] = strstr("สุดท้าย",$node->getAttribute('href')) ? $node->getAttribute('href') : "";
+			if(strstr($node->getAttribute('href'),"/list_content.php?page")) {
+				$stk[] = $node->getAttribute('href');
+				
+			}
+		}
+		return $stk;
+		// var_dump($stk);
+		echo reset($stk);
+		debugs(end($stk));
+		// echo 1;
+	}
+
 	$all = ceil(num/35);
 	function write_log($text) {
 		$file_name	= date("Y-m-d").".txt";
@@ -40,7 +156,7 @@
 			mkdir($folder,0777,true);
 		}
 		$text	= "============================================\r\n".$text;
-		file_put_contents($folder.$file_name,$text."\r\n",FILE_APPEND);
+		// file_put_contents($folder.$file_name,$text."\r\n",FILE_APPEND);
 	}
 	function get_node($html,$tag,$att,$find) {
 		$dom = new DOMDocument;
@@ -123,13 +239,16 @@
 			foreach($map_array as $key => $val) {
 				$new_url	= URL_N.$val['url'];
 				$new_data = get_url($new_url);
+				// debug($new_url);
 				debug($val);
 				$ss++;
 				if($ss >1) {
 					// var_dump($new_data);
 				}
+				// debug($new_data,1,1);
 				$node	= get_node($new_data,"input","value","one2up.com");
 				// debug($node,true); 
+				// exit('xx');
 				$p	= "files/".date("Ymd")."/page_".$ij."/";
 				// $p	= "files/song/";
 				if(!is_dir($p)) {
@@ -139,17 +258,18 @@
 				// debug($file,true);
 				// echo $file[8]."\r\n";
 				$filename = iconv('UTF-8','windows-874',$val['title']);
+				// debugs($filename,1,1); die();
 				$check_eng = false;
 				if (!preg_match('/[ก-ฮ]/', $filename)) {
 					$check_eng = true;
 					
 				}
 				if(check_ready($filename) == false && $check_eng == false) {
-					/*if(copy($node,$p.$filename)) {
-						$status	= "success";
-					}else{
-						$status	= "fail";
-					}*/
+					// if(copy($node,$p.$filename)) {
+					// 	$status	= "success";
+					// }else{
+					// 	$status	= "fail";
+					// }
 					 $status	= "fail";
 					$insert_log	= array(
 						'full_url'		=> $n_url,
@@ -164,9 +284,10 @@
 			}
 		}
 	}
-	function debug($data= array(),$v=false) {
+	function debug($data= array(),$v=false,$e=false) {
 		echo "<pre>"; print_r($data);echo "</pre>";
 		if($v == true)var_dump($data);
+		if($e == true) exit('debug');
 	}
 	// $replace	= array($k);
 	// $html	= str_replace($k,"",$html);
@@ -195,7 +316,7 @@
 	}
 	function insert_log($val = array()) {
 		@mysql_connect(hostname,username,password);
-		@mysql_select_db('save_pic');
+		@mysql_select_db('log_download');
 		@mysql_query("SET NAMES UTF8");
 		
 			$sql = "INSERT INTO  `log_download`
